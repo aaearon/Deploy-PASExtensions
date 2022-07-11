@@ -1,18 +1,34 @@
 ﻿#requires -modules PoShPACLI
 
 function Update-PASPlatformFiles {
+    <#
+    .SYNOPSIS
+        Updates platform files in the Vault.
+    .DESCRIPTION
+        Updates an existing platform's files in the Vault with the files in the specified path.
+
+        Both required platform files (Policy-$PlatformId.xml and Policy-$Platform.ini) must exist in the source path. Any optional files (Prompts, processes, PowerShell scripts, etc.) will be updated in the Vault as long as the platform was originally imported.
+    .NOTES
+        This function assumes a working PoShPACLI 'session'.
+    .EXAMPLE
+        Update-PASPlatformFiles -Path C:\Platform\CustomDevice -PlatformId CustomDevice
+        Updates the platform files for the platform with the ID of CustomDevice from the files in C:\Platforms\CustomDevice
+    .EXAMPLE
+        (Get-ChildItem $BasePlatformFolder).FullName | Update-PASPlatformFiles
+        Updates the platform files for all the platforms under C:\Platforms. The platform IDs are assumed from the folder names.
+    #>
     [CmdletBinding()]
     param (
+        # The ID of the platform to update.
         [Parameter(Mandatory = $false)]
-        [string]
-        $PlatformId,
+        [string]$PlatformId,
 
+        # The path to the platform files to update.
         [Parameter(
             Mandatory = $true,
             ValueFromPipeline = $true
         )]
-        [string]
-        $Path
+        [string]$Path
     )
 
     begin {
