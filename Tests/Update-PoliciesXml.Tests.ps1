@@ -1,23 +1,21 @@
 ﻿BeforeAll {
-    # . $PSScriptRoot\..\Deploy-PASExtensions\Functions\Update-PASPlatformFiles.ps1
-    Import-Module -Name "$PSScriptRoot\..\Deploy-PASExtensions\Deploy-PASExtensions.psd1"
+    Import-Module $PSScriptRoot\..\Deploy-PASExtensions\Deploy-PASExtensions.psd1
 
     Mock -CommandName Open-PVSafe
     Mock -CommandName Add-PVFile
     Mock -CommandName Close-PVSafe
-
 }
 
 Describe 'Update-PoliciesXml' {
     BeforeAll {
         Mock -CommandName Get-PVFile
-        Mock -CommandName Get-Content -ParameterFilter {$Path -like '*.tmp' } -MockWith { return (Get-Content -Path 'Tests\Policies.xml') }
+        Mock -CommandName Get-Content -ParameterFilter { $Path -like '*.tmp' } -MockWith { return (Get-Content -Path 'Tests\Policies.xml') }
 
     }
     It 'validates that the platform exists in Policies.xml' {
-        { Update-PoliciesXml -PVWASettingsFile 'Tests\Policy-RealVNCServiceMode.xml' -PlatformId 'RealVNCServiceMode' } | Should -Not -throw "Platform RealVNCServiceMode not found in Policies.xml"
+        { Update-PoliciesXml -PVWASettingsFile 'Tests\Policy-RealVNCServiceMode.xml' -PlatformId 'RealVNCServiceMode' } | Should -Not -Throw 'Platform RealVNCServiceMode not found in Policies.xml'
 
-        { Update-PoliciesXml -PVWASettingsFile 'Tests\Policy-RealVNCServiceMode.xml' -PlatformId 'RealVNCServiceModeNotExisting' } | Should -throw "Platform RealVNCServiceModeNotExisting not found in Policies.xml"
+        { Update-PoliciesXml -PVWASettingsFile 'Tests\Policy-RealVNCServiceMode.xml' -PlatformId 'RealVNCServiceModeNotExisting' } | Should -Throw 'Platform RealVNCServiceModeNotExisting not found in Policies.xml'
     }
 
     It 'replaces the platform content in Policies.xml with the content in the PVWA settings file' {
@@ -35,3 +33,4 @@ Describe 'Update-PoliciesXml' {
         }
     }
 }
+2

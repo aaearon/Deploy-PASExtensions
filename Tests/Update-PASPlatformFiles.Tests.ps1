@@ -1,6 +1,5 @@
 ﻿BeforeAll {
-    # . $PSScriptRoot\..\Deploy-PASExtensions\Functions\Update-PASPlatformFiles.ps1
-    Import-Module -Name $PSScriptRoot\..\Deploy-PASExtensions\Deploy-PASExtensions.psd1
+    Import-Module $PSScriptRoot\..\Deploy-PASExtensions\Deploy-PASExtensions.psd1
 
     Mock -CommandName Open-PVSafe
     Mock -CommandName Add-PVFile
