@@ -37,7 +37,7 @@ function Update-PASPlatformFiles {
 
     process {
 
-        if ($null -eq $PlatformId -or $PlatformId -eq "") {
+        if ($null -eq $PlatformId -or $PlatformId -eq '') {
             $PlatformId = (Get-Item $Path).Name
         }
 
@@ -115,7 +115,8 @@ function Update-PoliciesXml {
         $PoliciesXml.Save($TemporaryFile.FullName)
 
         Add-PVFile -safe PVWAConfig -folder root -file 'Policies.xml' -localFolder $TemporaryFile.DirectoryName -localFile $TemporaryFile.Name
-    } else {
+    }
+    else {
         throw "Platform $PlatformId not found in Policies.xml"
     }
     Close-PVSafe -safe PVWAConfig
