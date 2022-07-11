@@ -89,8 +89,8 @@ function Update-PASPlatformFiles {
 
 function Update-PoliciesXml {
     param (
-        $PVWASettingsFile,
-        $PlatformId
+        [string]$PVWASettingsFile,
+        [string]$PlatformId
     )
 
     $TemporaryFile = New-TemporaryFile
@@ -102,16 +102,15 @@ function Update-PoliciesXml {
     $PVWASettingsXml = [xml](Get-Content $PVWASettingsFile)
 
     # Search via PlatformId as it could be a Policy, Usage, whatever.
-    $ExistingPolicyElement = $PoliciesXml.SelectSingleNode("//*[@ID='$PlatformId']")
+    $ExistingPolicyElement = $PoliciesXml.SelectSingleNode("//Policy[@ID='$PlatformId'] | //Usage[@ID='$PlatformId']")
     if ($null -ne $ExistingPolicyElement) {
         # Import the Policy element from the PVWASettingsFile to the PoliciesXml document.
         $NewPolicyElement = $PoliciesXml.ImportNode($PVWASettingsXml.SelectSingleNode("//*[@ID='$PlatformId']"), $true)
 
         # Add the new policy element we imported, replace the old one.
-        # Can this be done better with .ReplaceChild()?
-        $ExistingPolicyElement.ParentNode.AppendChild($NewPolicyElement)
-        $ExistingPolicyElement.ParentNode.RemoveChild($ExistingPolicyElement)
+        $ExistingPolicyElement.ParentNode.ReplaceChild($NewPolicyElement, $ExistingPolicyElement)
 
+        # Full path always needs to be provided with .Save().
         $PoliciesXml.Save($TemporaryFile.FullName)
 
         Add-PVFile -safe PVWAConfig -folder root -file 'Policies.xml' -localFolder $TemporaryFile.DirectoryName -localFile $TemporaryFile.Name
