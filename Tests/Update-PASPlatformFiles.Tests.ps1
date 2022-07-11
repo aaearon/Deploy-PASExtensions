@@ -1,22 +1,22 @@
 ﻿BeforeAll {
-    . $PSScriptRoot\..\Update-PASPlatformFiles.ps1
+    Import-Module $PSScriptRoot\..\Deploy-PASExtensions\Deploy-PASExtensions.psd1
 
-    Mock -CommandName Open-PVSafe
-    Mock -CommandName Add-PVFile
-    Mock -CommandName Close-PVSafe
+    Mock -CommandName Open-PVSafe -ModuleName Deploy-PASExtensions
+    Mock -CommandName Add-PVFile -ModuleName Deploy-PASExtensions
+    Mock -CommandName Close-PVSafe -ModuleName Deploy-PASExtensions
 
 }
 
 Describe 'Update-PASPlatformFiles' {
     BeforeAll {
-        Mock -CommandName Update-PoliciesXml
-        Mock -CommandName Get-PVFile
+        Mock -CommandName Update-PoliciesXml -ModuleName Deploy-PASExtensions
+        Mock -CommandName Get-PVFile -ModuleName Deploy-PASExtensions
 
-        Mock -CommandName Find-PVFile -MockWith { $true }
+        Mock -CommandName Find-PVFile -MockWith { $true } -ModuleName Deploy-PASExtensions
         Mock -CommandName Get-PVFolder -MockWith { return [PSCustomObject]@{
                 Folder = "Root\ImportedPlatforms\Policy-$PlatformId"
             }
-        }
+        } -ModuleName Deploy-PASExtensions
 
         # Create a dummy platform and structure for the test
         $PlatformId = 'SamplePlatform'
@@ -40,7 +40,7 @@ Describe 'Update-PASPlatformFiles' {
             $file -eq "Policy-$PlatformId.ini" -and
             $localFolder -eq $PlatformDirectory -and
             $localFile -eq "Policy-$PlatformId.ini"
-        }
+        } -ModuleName Deploy-PASExtensions
     }
 
     It 'takes a list of platform folders and updates the files' {
@@ -61,7 +61,7 @@ Describe 'Update-PASPlatformFiles' {
             $file -eq "Policy-$PlatformId.ini" -and
             $localFolder -eq $PlatformDirectory -and
             $localFile -eq "Policy-$PlatformId.ini"
-        }
+        } -ModuleName Deploy-PASExtensions
 
         Should -Invoke -CommandName Add-PVFile -ParameterFilter {
             $safe -eq 'PasswordManagerShared' -and
@@ -69,11 +69,11 @@ Describe 'Update-PASPlatformFiles' {
             $file -eq "Policy-$PlatformId2.ini" -and
             $localFolder -eq $PlatformDirectory2 -and
             $localFile -eq "Policy-$PlatformId2.ini"
-        }
+        } -ModuleName Deploy-PASExtensions
     }
 
     It 'writes an error if the platform is not found in the Vault' {
-        Mock -CommandName Find-PVFile -MockWith { $null }
+        Mock -CommandName Find-PVFile -MockWith { $null } -ModuleName Deploy-PASExtensions
 
         { Update-PASPlatformFiles -PlatformId banana -Path $PlatformDirectory } | Should -throw "Platform banana not found in Vault. Aborting."
     }
@@ -89,7 +89,7 @@ Describe 'Update-PASPlatformFiles' {
                 $file -eq "Policy-$PlatformId.ini" -and
                 $localFolder -eq $PlatformDirectory -and
                 $localFile -eq "Policy-$PlatformId.ini"
-            }
+            } -ModuleName Deploy-PASExtensions
         }
         It 'must add any optional files to the Vault' {
             Update-PASPlatformFiles -PlatformId $PlatformId -Path $PlatformDirectory
@@ -100,7 +100,7 @@ Describe 'Update-PASPlatformFiles' {
                 $file -eq "$($PlatformId)Process.ini" -and
                 $localFolder -eq $PlatformDirectory -and
                 $localFile -eq "$($PlatformId)Process.ini"
-            }
+            } -ModuleName Deploy-PASExtensions
 
             Should -Invoke -CommandName Add-PVFile -ParameterFilter {
                 $safe -eq 'PasswordManagerShared' -and
@@ -108,12 +108,12 @@ Describe 'Update-PASPlatformFiles' {
                 $file -eq "$($PlatformId)Prompts.ini" -and
                 $localFolder -eq $PlatformDirectory -and
                 $localFile -eq "$($PlatformId)Prompts.ini"
-            }
+            } -ModuleName Deploy-PASExtensions
         }
 
         It 'does not add optional files to the Vault if the platform was not imported' {
-            Mock -CommandName Get-PVFolder -MockWith { $null }
-            Mock -CommandName Write-Warning
+            Mock -CommandName Get-PVFolder -MockWith { $null } -ModuleName Deploy-PASExtensions
+            Mock -CommandName Write-Warning -ModuleName Deploy-PASExtensions
 
             Update-PASPlatformFiles -PlatformId $PlatformId -Path $PlatformDirectory
 
@@ -123,7 +123,7 @@ Describe 'Update-PASPlatformFiles' {
                 $file -eq "$($PlatformId)Process.ini" -and
                 $localFolder -eq $PlatformDirectory -and
                 $localFile -eq "$($PlatformId)Process.ini"
-            }
+            } -ModuleName Deploy-PASExtensions
 
             Should -Not -Invoke -CommandName Add-PVFile -ParameterFilter {
                 $safe -eq 'PasswordManagerShared' -and
@@ -131,9 +131,9 @@ Describe 'Update-PASPlatformFiles' {
                 $file -eq "$($PlatformId)Prompts.ini" -and
                 $localFolder -eq $PlatformDirectory -and
                 $localFile -eq "$($PlatformId)Prompts.ini"
-            }
+            } -ModuleName Deploy-PASExtensions
 
-            Should -Invoke -CommandName Write-Warning
+            Should -Invoke -CommandName Write-Warning -ModuleName Deploy-PASExtensions
         }
 
         It 'must merge the PVWA settings file into Policies.xml' {
@@ -142,36 +142,8 @@ Describe 'Update-PASPlatformFiles' {
             Should -Invoke -CommandName Update-PoliciesXml -ParameterFilter {
                 $PVWASettingsFile -eq $PlatformPVWASettingsFile -and
                 $PesterBoundParameters.PlatformId -eq $PlatformId
-            }
+            } -ModuleName Deploy-PASExtensions
 
-        }
-    }
-}
-
-Describe 'Update-PoliciesXml' {
-    BeforeAll {
-        Mock -CommandName Get-PVFile
-        Mock -CommandName Get-Content -ParameterFilter {$Path -like '*.tmp' } -MockWith { return (Get-Content -Path 'Tests\Policies.xml') }
-
-    }
-    It 'validates that the platform exists in Policies.xml' {
-        { Update-PoliciesXml -PVWASettingsFile 'Tests\Policy-RealVNCServiceMode.xml' -PlatformId 'RealVNCServiceMode' } | Should -Not -throw "Platform RealVNCServiceMode not found in Policies.xml"
-
-        { Update-PoliciesXml -PVWASettingsFile 'Tests\Policy-RealVNCServiceMode.xml' -PlatformId 'RealVNCServiceModeNotExisting' } | Should -throw "Platform RealVNCServiceModeNotExisting not found in Policies.xml"
-    }
-
-    It 'replaces the platform content in Policies.xml with the content in the PVWA settings file' {
-        $PoliciesXml = Update-PoliciesXml -PVWASettingsFile 'Tests\Policy-RealVNCServiceMode.xml' -PlatformId 'RealVNCServiceMode'
-        (Select-Xml -Xml $PoliciesXml -XPath '//*[@ID="RealVNCServiceMode"]/Properties/Optional/Property[@Name="Banana"]')[0] | Should -Be $true
-    }
-
-    It 'adds the new Policies.xml to the Vault' {
-        Update-PoliciesXml -PVWASettingsFile 'Tests\Policy-RealVNCServiceMode.xml' -PlatformId 'RealVNCServiceMode'
-
-        Should -Invoke -CommandName Add-PVFile -ParameterFilter {
-            $safe -eq 'PVWAConfig' -and
-            $folder -eq 'root' -and
-            $file -eq 'Policies.xml'
         }
     }
 }
