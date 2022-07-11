@@ -1,15 +1,15 @@
 ﻿BeforeAll {
-    Import-Module $PSScriptRoot\..\Deploy-PASExtensions\Deploy-PASExtensions.psd1
+    Import-Module $PSScriptRoot\..\Deploy-PASExtensions\Deploy-PASExtensions.psd1 -Force
 
-    Mock -CommandName Open-PVSafe
-    Mock -CommandName Add-PVFile
-    Mock -CommandName Close-PVSafe
+    Mock -CommandName Open-PVSafe -ModuleName Deploy-PASExtensions
+    Mock -CommandName Add-PVFile -ModuleName Deploy-PASExtensions
+    Mock -CommandName Close-PVSafe -ModuleName Deploy-PASExtensions
 }
 
 Describe 'Update-PoliciesXml' {
     BeforeAll {
-        Mock -CommandName Get-PVFile
-        Mock -CommandName Get-Content -ParameterFilter { $Path -like '*.tmp' } -MockWith { return (Get-Content -Path 'Tests\Policies.xml') }
+        Mock -CommandName Get-PVFile -ModuleName Deploy-PASExtensions
+        Mock -CommandName Get-Content -ParameterFilter { $Path -like '*.tmp' } -MockWith { return (Get-Content -Path 'Tests\Policies.xml') } -ModuleName Deploy-PASExtensions
 
     }
     It 'validates that the platform exists in Policies.xml' {
@@ -30,7 +30,6 @@ Describe 'Update-PoliciesXml' {
             $safe -eq 'PVWAConfig' -and
             $folder -eq 'root' -and
             $file -eq 'Policies.xml'
-        }
+        } -ModuleName Deploy-PASExtensions
     }
 }
-2
