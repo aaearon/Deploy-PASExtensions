@@ -66,7 +66,7 @@
         $PlatformWasImported = Get-PVFolder -safe PasswordManagerShared | Where-Object { $_.Folder -eq "Root\ImportedPlatforms\Policy-$PlatformId" }
         if ($PlatformWasImported) {
             foreach ($File in (Get-ChildItem -Path $Path)) {
-                if ($File.Name -ne "Policy-$PlatformId.ini" -or $File.Name -ne "Policy-$PlatformId.xml") {
+                if ($File.Name -ne "Policy-$PlatformId.ini" -and $File.Name -ne "Policy-$PlatformId.xml") {
                     Add-PVFile -safe PasswordManagerShared -folder root\ImportedPlatforms\Policy-$PlatformId -file $File.Name -localFolder $File.DirectoryName -localFile $File.Name
                 }
                 else {
