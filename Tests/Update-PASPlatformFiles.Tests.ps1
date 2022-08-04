@@ -111,6 +111,30 @@ Describe 'Update-PASPlatformFiles' {
             } -ModuleName Deploy-PASExtensions
         }
 
+        It 'does not add the CPM policy file to the platform folder under ImportedPlatforms' {
+            Update-PASPlatformFiles -PlatformId $PlatformId -Path $PlatformDirectory
+
+            Should -Not -Invoke -CommandName Add-PVFile -ParameterFilter {
+                $safe -eq 'PasswordManagerShared' -and
+                $folder -eq "root\ImportedPlatforms\Policy-$PlatformId" -and
+                $file -eq "Policy-$PlatformId.ini" -and
+                $localFolder -eq $PlatformDirectory -and
+                $localFile -eq "Policy-$PlatformId.ini"
+            } -ModuleName Deploy-PASExtensions
+        }
+
+        It 'does not add the PVWA config file to the platform folder under ImportedPlatforms' {
+            Update-PASPlatformFiles -PlatformId $PlatformId -Path $PlatformDirectory
+
+            Should -Not -Invoke -CommandName Add-PVFile -ParameterFilter {
+                $safe -eq 'PasswordManagerShared' -and
+                $folder -eq "root\ImportedPlatforms\Policy-$PlatformId" -and
+                $file -eq "Policy-$PlatformId.xml" -and
+                $localFolder -eq $PlatformDirectory -and
+                $localFile -eq "Policy-$PlatformId.xml"
+            } -ModuleName Deploy-PASExtensions
+        }
+
         It 'does not add optional files to the Vault if the platform was not imported' {
             Mock -CommandName Get-PVFolder -MockWith { $null } -ModuleName Deploy-PASExtensions
             Mock -CommandName Write-Warning -ModuleName Deploy-PASExtensions
